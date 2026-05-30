@@ -770,6 +770,8 @@ function bindEvents() {
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', () => {
             document.querySelectorAll('.modal').forEach(modal => modal.classList.remove('show'));
+            // 清除详情弹窗残留图片
+            document.getElementById('detailModal').style.removeProperty('--detail-bg-image');
         });
     });
     document.querySelectorAll('.filter-chip').forEach(chip => {
@@ -831,6 +833,8 @@ function bindEvents() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal').forEach(modal => modal.classList.remove('show'));
+            // 清除详情弹窗残留图片
+            document.getElementById('detailModal').style.removeProperty('--detail-bg-image');
         }
     });
 }
