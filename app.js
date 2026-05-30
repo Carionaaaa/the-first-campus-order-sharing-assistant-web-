@@ -504,8 +504,8 @@ async function renderDetailContent(groupBuyId) {
     const detailContent = document.getElementById('detailContent');
     const detailModal = document.getElementById('detailModal');
     detailContent.innerHTML = '<p>加载中...</p>';
-    // 先清除旧图片，避免显示上一次打开的拼单图片
-    detailModal.style.removeProperty('--detail-bg-image');
+    // 用 none 覆写（不用 removeProperty，避免引发渲染抖动）
+    detailModal.style.setProperty('--detail-bg-image', 'none');
     try {
         const groupBuy = await fetchGroupBuyById(groupBuyId);
         if (!groupBuy) {
@@ -644,10 +644,7 @@ async function openDetailModal(groupBuyId) {
 }
 
 function closeDetailModal() {
-    const modal = document.getElementById('detailModal');
-    modal.classList.remove('show');
-    // 清除上一次的图片缓存，防止下次打开时闪现旧图片
-    modal.style.removeProperty('--detail-bg-image');
+    document.getElementById('detailModal').classList.remove('show');
 }
 
 // ==================== 表单处理 ====================
@@ -770,8 +767,6 @@ function bindEvents() {
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', () => {
             document.querySelectorAll('.modal').forEach(modal => modal.classList.remove('show'));
-            // 清除详情弹窗残留图片
-            document.getElementById('detailModal').style.removeProperty('--detail-bg-image');
         });
     });
     document.querySelectorAll('.filter-chip').forEach(chip => {
@@ -833,8 +828,6 @@ function bindEvents() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal').forEach(modal => modal.classList.remove('show'));
-            // 清除详情弹窗残留图片
-            document.getElementById('detailModal').style.removeProperty('--detail-bg-image');
         }
     });
 }
