@@ -346,14 +346,22 @@ async function loadRecommendations() {
 
 // ==================== UI 渲染 ====================
 
+// 数据库存中文分类名，CONFIG 用英文 key，此函数做反向映射
+function getCategoryKey(dbCategory) {
+    const reverse = { '外卖':'food', '奶茶':'drink', '超市':'supermarket', '其他':'other' };
+    return reverse[dbCategory] || dbCategory;
+}
+
 function getGroupBuyImage(groupBuy) {
     if (groupBuy.image) return groupBuy.image;
-    const categoryInfo = CONFIG.CATEGORY_MAP[groupBuy.category];
+    const key = getCategoryKey(groupBuy.category);
+    const categoryInfo = CONFIG.CATEGORY_MAP[key];
     return categoryInfo?.image || CONFIG.DEFAULT_IMAGE;
 }
 
 function renderGroupBuyCard(groupBuy, index) {
-    const categoryInfo = CONFIG.CATEGORY_MAP[groupBuy.category] || CONFIG.CATEGORY_MAP['other'];
+    const categoryKey = getCategoryKey(groupBuy.category);
+    const categoryInfo = CONFIG.CATEGORY_MAP[categoryKey] || CONFIG.CATEGORY_MAP['other'];
     const campusName = CONFIG.CAMPUS_MAP[groupBuy.campus] || groupBuy.campus;
     const perPerson = groupBuy.per_price || calculateAA(groupBuy.total_amount, groupBuy.target_people);
     const progress = (groupBuy.current_people / groupBuy.target_people) * 100;
@@ -414,7 +422,7 @@ function renderRecommendationCard(groupBuy, index) {
     const perPerson = groupBuy.per_price || calculateAA(groupBuy.total_amount, groupBuy.target_people);
     let imageUrl = groupBuy.image;
     if (!imageUrl) {
-        const catInfo = CONFIG.CATEGORY_MAP[groupBuy.category];
+        const catInfo = CONFIG.CATEGORY_MAP[getCategoryKey(groupBuy.category)];
         imageUrl = catInfo?.image || CONFIG.DEFAULT_IMAGE;
     }
     const card = document.createElement('div');
@@ -512,7 +520,7 @@ async function renderDetailContent(groupBuyId) {
             detailContent.innerHTML = '<p>拼单不存在</p>';
             return;
         }
-        const categoryInfo = CONFIG.CATEGORY_MAP[groupBuy.category] || CONFIG.CATEGORY_MAP['other'];
+        const categoryInfo = CONFIG.CATEGORY_MAP[getCategoryKey(groupBuy.category)] || CONFIG.CATEGORY_MAP['other'];
         const campusName = CONFIG.CAMPUS_MAP[groupBuy.campus] || groupBuy.campus;
         const perPerson = groupBuy.per_price || calculateAA(groupBuy.total_amount, groupBuy.target_people);
         const progress = (groupBuy.current_people / groupBuy.target_people) * 100;
