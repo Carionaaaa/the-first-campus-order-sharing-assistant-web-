@@ -317,19 +317,22 @@ async function loadRecommendations() {
 
     const userData = getUserData();
     const history = userData.history;
-    if (history.length === 0) return [];
+    let preferredCampus = null, preferredCategory = null;
 
-    const campusCount = {}, catCount = {};
-    history.forEach(record => {
-        campusCount[record.campus] = (campusCount[record.campus] || 0) + 1;
-        catCount[record.category] = (catCount[record.category] || 0) + 1;
-    });
-    const preferredCampus = Object.keys(campusCount).reduce((a,b) => campusCount[a] > campusCount[b] ? a : b, null);
-    const preferredCategory = Object.keys(catCount).reduce((a,b) => catCount[a] > catCount[b] ? a : b, null);
+    if (history.length > 0) {
+        const campusCount = {}, catCount = {};
+        history.forEach(record => {
+            campusCount[record.campus] = (campusCount[record.campus] || 0) + 1;
+            catCount[record.category] = (catCount[record.category] || 0) + 1;
+        });
+        preferredCampus = Object.keys(campusCount).reduce((a,b) => campusCount[a] > campusCount[b] ? a : b, null);
+        preferredCategory = Object.keys(catCount).reduce((a,b) => catCount[a] > catCount[b] ? a : b, null);
+    }
 
     let query = sb.from('group_buys').select('*').eq('status', 'active');
-    if (preferredCampus) query = query.eq('campus', preferredCampus);
-    else if (preferredCategory) {
+    if (preferredCampus) {
+        query = query.eq('campus', preferredCampus);
+    } else if (preferredCategory) {
         const catMap = { 'food':'外卖', 'drink':'奶茶', 'supermarket':'超市', 'other':'其他' };
         query = query.eq('category', catMap[preferredCategory] || preferredCategory);
     }
@@ -501,6 +504,8 @@ async function renderDetailContent(groupBuyId) {
     const detailContent = document.getElementById('detailContent');
     const detailModal = document.getElementById('detailModal');
     detailContent.innerHTML = '<p>加载中...</p>';
+    // 先清除旧图片，避免显示上一次打开的拼单图片
+    detailModal.style.removeProperty('--detail-bg-image');
     try {
         const groupBuy = await fetchGroupBuyById(groupBuyId);
         if (!groupBuy) {
@@ -639,7 +644,10 @@ async function openDetailModal(groupBuyId) {
 }
 
 function closeDetailModal() {
-    document.getElementById('detailModal').classList.remove('show');
+    const modal = document.getElementById('detailModal');
+    modal.classList.remove('show');
+    // 清除上一次的图片缓存，防止下次打开时闪现旧图片
+    modal.style.removeProperty('--detail-bg-image');
 }
 
 // ==================== 表单处理 ====================
@@ -689,8 +697,8 @@ async function handlePublishSubmit(e) {
         closePublishModal();
         form.reset();
         await renderGroupBuyList();
-        await renderRecommendations();
         updateUserHistory(formData.campus, formData.category);
+        await renderRecommendations();
     } catch (error) {
         console.error('发布失败:', error);
         showToast('发布失败：' + error.message, 'error');
